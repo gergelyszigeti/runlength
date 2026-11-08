@@ -27,19 +27,33 @@ int main(int argc, char *argv[])
     size_t input_buf_idx = 0, output_buf_idx = 0;
     size_t output_runlen_idx = 0;
 
-    auto read_stdin = [&] {
-        input_end = fread(input_buf, 1, input_buf_size, stdin);
+    std::FILE* in_f = stdin;
+    std::FILE* out_f = stdout;
+
+    if (argc > 1) {
+        std::cout << argv[1] << "\n";
+        in_f = std::fopen(argv[1], "r");
+        if (in_f == NULL) { std::cerr << "File not found: " << argv[1] << "\n"; exit(1); }
+        if (argc > 2) {
+            std::cout << argv[2] << "\n";
+            out_f = std::fopen(argv[2], "w");
+            if (out_f == NULL) { std::cerr << "Can not create file: " << argv[2] << "\n"; exit(1); }
+        }
+    }
+
+    auto read_in_file = [&] {
+        input_end = std::fread(input_buf, 1, input_buf_size, in_f);
         input_still_feeding = input_end == input_buf_size;
         input_buf_idx = 0;
     };
-    auto write_stdout = [&] {
-        fwrite(output_buf, 1, output_buf_idx, stdout);
+    auto write_out_file = [&] {
+        std::fwrite(output_buf, 1, output_buf_idx, out_f);
         //std::cerr << "in write:" << output_buf_idx << "\n";
         output_buf_idx = 0;
     };
 
 
-    read_stdin();
+    read_in_file();
     char last_elem = '\0';
     if (input_end > 0) {
         last_elem = input_buf[0] - 1;
@@ -57,8 +71,8 @@ int main(int argc, char *argv[])
     /* arbitrary data run */
     while( input_still_feeding || input_buf_idx < input_end ) {
 
-        if ( input_buf_idx >  input_buf_size - min_buf_size)     { read_stdin();   }
-        if (output_buf_idx > output_buf_size - min_buf_size - 1) { write_stdout(); }
+        if ( input_buf_idx >  input_buf_size - min_buf_size)     { read_in_file();   }
+        if (output_buf_idx > output_buf_size - min_buf_size - 1) { write_out_file(); }
 
         output_runlen_idx = output_buf_idx++;
         run_idx = 0;
@@ -90,14 +104,16 @@ int main(int argc, char *argv[])
 
     /* repeating data run */
     bool repeating_data_stored = false;
+    //std::cerr << "input still feeding: " << input_still_feeding
+    //          << " input_buf_idx: " << input_buf_idx << " input_end: " << input_end << "\n";
     while( input_still_feeding || input_buf_idx < input_end ) {
 
         //std::cerr << "Start repeating block:\n";
         if ( input_buf_idx >  input_buf_size - min_buf_size) {
-            read_stdin();
+            read_in_file();
         }
         if (output_buf_idx > output_buf_size - 2) {
-            write_stdout();
+            write_out_file();
         }
 
         auto& repeating_elem = last_elem;
@@ -110,13 +126,15 @@ int main(int argc, char *argv[])
             input_buf_idx++;
         }
         //std::cerr << "input_buf_idx: " << input_buf_idx << "\n";
+        //std::cerr << "runlen: " << run_idx << " repeating_elem: " << repeating_elem << "\n";
         output_buf[output_buf_idx++] = run_idx ; // this run length
         //std::cerr << "after repeat_count: " << output_buf_idx << "\n";
         if (repeating_data_stored == false) {
+            //std::cerr << "stored repeating char: " << output_buf[output_buf_idx++] << "\n";
             output_buf_idx++; // We skip over the second 'A' from the example above,
                               // it is already our repeating letter!
             repeating_data_stored  = true;
-            std::cerr << "in skip: " << output_buf_idx << "\n";
+            //std::cerr << "in skip: " << output_buf_idx << "\n";
         }
         if (run_idx < char_max) {
             last_elem = input_buf[input_buf_idx];
@@ -125,5 +143,5 @@ int main(int argc, char *argv[])
         //std::cerr << input_buf_idx << " , " << output_buf_idx << "\n";
     } // repeating data while end
     } while( input_still_feeding || input_buf_idx < input_end);
-    write_stdout();
+    write_out_file();
 }
