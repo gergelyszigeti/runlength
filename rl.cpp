@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <iostream>
+#include <format>
 
 constexpr size_t char_max        =  255;
 constexpr size_t min_buf_size    =  char_max + 1;
@@ -21,6 +22,9 @@ int main(int argc, char *argv[])
         std::cout << len;
     }
 */
+    size_t read_bytes = 0;
+    size_t written_bytes = 0;
+
     bool input_still_feeding = true;
     size_t input_end = 0;
 
@@ -41,15 +45,37 @@ int main(int argc, char *argv[])
         }
     }
 
+
+    size_t print_skip = 0;
+    auto print_statistics = [&] {
+        constexpr size_t print_freq = 1000;
+        if (!print_skip) {
+
+            // print statistics
+            constexpr const char* CLEAR_TO_EOL = "\x1b[K";
+            std::fputs("\r", stderr);
+            std::string stats = std::format(" Compression: {:5.1f}% {}/{}",
+                    static_cast<float>(written_bytes)/static_cast<float>(read_bytes) * 100.0,
+                    written_bytes, read_bytes);
+            std::fputs(stats.c_str(), stderr);
+            std::fputs(CLEAR_TO_EOL, stderr);
+            std::fflush(stderr);
+        }
+        print_skip++; if (print_skip == print_freq) { print_skip = 0; }
+    };
+
     auto read_in_file = [&] {
         input_end = std::fread(input_buf, 1, input_buf_size, in_f);
+        read_bytes += input_end;
         input_still_feeding = input_end == input_buf_size;
         input_buf_idx = 0;
     };
     auto write_out_file = [&] {
         std::fwrite(output_buf, 1, output_buf_idx, out_f);
         //std::cerr << "in write:" << output_buf_idx << "\n";
+        written_bytes += output_buf_idx;
         output_buf_idx = 0;
+        print_statistics();
     };
 
 
@@ -143,5 +169,7 @@ int main(int argc, char *argv[])
         //std::cerr << input_buf_idx << " , " << output_buf_idx << "\n";
     } // repeating data while end
     } while( input_still_feeding || input_buf_idx < input_end);
+    print_skip = static_cast<size_t>(false);
     write_out_file();
+    std::fputs("\n", stderr);
 }
