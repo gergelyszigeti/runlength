@@ -112,12 +112,10 @@ int main(int argc, char *argv[])
             same_length = input_buf[input_buf_idx]  == last_elem ? same_length + 1 : 1;
             last_elem = output_buf[output_buf_idx++] = input_buf[input_buf_idx++];
         }
-        // TODO: here we should decrease run_idx by one (already repeating elem)
-        // TODO: if run_idx - 1 is not 0, decrease output idx also
-        //       (and count already repeating element in the next block)
+        // TODO: this won't work with run_idx == run_limit case, something else needed
         output_buf[output_runlen_idx] = run_idx - at_least_repeat; // this run length
         // TODO: rare case, running_idx is 0 - or is it already done?
-        if (run_idx < char_max) {
+        if (run_idx < run_limit) {
             // Note: we have already read at least 2 identical elements, say 4 'A' letters:
             // AAAA - we go back to the first A, and use as the runlength,
             // and keep the second one: <runlength>AAA - the last two AAs can be overwritten
