@@ -35,11 +35,9 @@ int main(int argc, char *argv[])
     std::FILE* out_f = stdout;
 
     if (argc > 1) {
-        std::cout << argv[1] << "\n";
         in_f = std::fopen(argv[1], "r");
         if (in_f == NULL) { std::cerr << "File not found: " << argv[1] << "\n"; exit(1); }
         if (argc > 2) {
-            std::cout << argv[2] << "\n";
             out_f = std::fopen(argv[2], "w");
             if (out_f == NULL) { std::cerr << "Can not create file: " << argv[2] << "\n"; exit(1); }
         }
