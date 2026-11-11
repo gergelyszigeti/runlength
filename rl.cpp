@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
         }
 
         auto& repeating_elem = last_elem;
-        run_idx = 0;
+        run_idx = at_least_repeat;
         run_limit = input_still_feeding ? char_max : input_end - input_buf_idx;
         //std::cerr << "Repeating runlimit: " << run_limit << "\n";
         while (    run_idx < run_limit
