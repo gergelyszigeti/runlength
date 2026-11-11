@@ -2,8 +2,8 @@
 #include <iostream>
 #include <format>
 
-constexpr size_t char_max        =  255;
-constexpr size_t min_buf_size    =  char_max + 1;
+constexpr size_t char_type_max   =  255;
+constexpr size_t min_buf_size    =  char_type_max + 1;
 constexpr size_t  input_buf_size =  min_buf_size * 2;
 constexpr size_t output_buf_size =  min_buf_size * 4;
 char  input_buf[ input_buf_size];
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 
         output_runlen_idx = output_buf_idx++;
         run_idx = 0;
-        run_limit = input_still_feeding ? char_max : input_end - input_buf_idx;
+        run_limit = input_still_feeding ? char_type_max : input_end - input_buf_idx;
 
         size_t same_length = 1;
         //std::cerr << "Arbitrary runlimit: " << run_limit << "\n";
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 
         auto& repeating_elem = last_elem;
         run_idx = at_least_repeat;
-        run_limit = input_still_feeding ? char_max : input_end - input_buf_idx;
+        run_limit = input_still_feeding ? char_type_max : input_end - input_buf_idx;
         //std::cerr << "Repeating runlimit: " << run_limit << "\n";
         while (    run_idx < run_limit
                 && input_buf[input_buf_idx] == repeating_elem ) {
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
             repeating_data_stored  = true;
             //std::cerr << "in skip: " << output_buf_idx << "\n";
         }
-        if (run_idx < char_max) {
+        if (run_idx < char_type_max) {
             last_elem = input_buf[input_buf_idx];
             break; // go to arbitrary data block
         }
